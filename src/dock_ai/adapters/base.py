@@ -10,9 +10,13 @@ class Venue(BaseModel):
     name: str
     address: str
     category: str  # "restaurant", "hair_salon", "spa", etc.
-    subcategory: str | None = None  # "French", "Haircut", etc.
     provider: str
     rating: float | None = None
+    # Category-specific attributes (matches filter names)
+    cuisine: str | None = None      # for restaurants
+    service: str | None = None      # for hair_salon, spa
+    activity: str | None = None     # for fitness
+    price_range: str | None = None  # for any category
 
 
 class TimeSlot(BaseModel):

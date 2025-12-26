@@ -14,34 +14,34 @@ from .base import BaseAdapter, Venue, TimeSlot, Booking
 MOCK_VENUES = {
     "restaurant": {
         "paris": [
-            {"id": "demo_paris_001", "name": "The Golden Fork", "address": "15 Avenue des Champs, 75008 Paris", "subcategory": "French", "rating": 4.5},
-            {"id": "demo_paris_002", "name": "Urban Garden", "address": "42 Rue de Rivoli, 75001 Paris", "subcategory": "Contemporary", "rating": 4.8},
-            {"id": "demo_paris_003", "name": "Sakura Blossom", "address": "8 Rue Saint-Anne, 75001 Paris", "subcategory": "Japanese", "rating": 4.6},
-            {"id": "demo_paris_004", "name": "The Blue Oyster", "address": "23 Boulevard Saint-Germain, 75005 Paris", "subcategory": "Seafood", "rating": 4.7},
+            {"id": "demo_paris_001", "name": "The Golden Fork", "address": "15 Avenue des Champs, 75008 Paris", "cuisine": "French", "price_range": "$$$", "rating": 4.5},
+            {"id": "demo_paris_002", "name": "Urban Garden", "address": "42 Rue de Rivoli, 75001 Paris", "cuisine": "Contemporary", "price_range": "$$", "rating": 4.8},
+            {"id": "demo_paris_003", "name": "Sakura Blossom", "address": "8 Rue Saint-Anne, 75001 Paris", "cuisine": "Japanese", "price_range": "$$$", "rating": 4.6},
+            {"id": "demo_paris_004", "name": "The Blue Oyster", "address": "23 Boulevard Saint-Germain, 75005 Paris", "cuisine": "Seafood", "price_range": "$$$$", "rating": 4.7},
         ],
         "london": [
-            {"id": "demo_london_001", "name": "The Gilded Plate", "address": "127 Kensington High Street, London W8", "subcategory": "British", "rating": 4.8},
-            {"id": "demo_london_002", "name": "Spice Route", "address": "45 Brick Lane, London E1", "subcategory": "Indian", "rating": 4.6},
-            {"id": "demo_london_003", "name": "The Green Table", "address": "88 Borough Market, London SE1", "subcategory": "Vegetarian", "rating": 4.7},
+            {"id": "demo_london_001", "name": "The Gilded Plate", "address": "127 Kensington High Street, London W8", "cuisine": "British", "price_range": "$$$$", "rating": 4.8},
+            {"id": "demo_london_002", "name": "Spice Route", "address": "45 Brick Lane, London E1", "cuisine": "Indian", "price_range": "$$", "rating": 4.6},
+            {"id": "demo_london_003", "name": "The Green Table", "address": "88 Borough Market, London SE1", "cuisine": "Vegetarian", "price_range": "$$", "rating": 4.7},
         ],
         "new york": [
-            {"id": "demo_nyc_001", "name": "Manhattan Nights", "address": "350 5th Avenue, New York, NY 10118", "subcategory": "American", "rating": 4.7},
-            {"id": "demo_nyc_002", "name": "Little Italy Kitchen", "address": "156 Mulberry Street, New York, NY 10013", "subcategory": "Italian", "rating": 4.5},
-            {"id": "demo_nyc_003", "name": "Harlem Soul", "address": "2340 Frederick Douglass Blvd, New York, NY 10027", "subcategory": "Soul Food", "rating": 4.8},
+            {"id": "demo_nyc_001", "name": "Manhattan Nights", "address": "350 5th Avenue, New York, NY 10118", "cuisine": "American", "price_range": "$$$", "rating": 4.7},
+            {"id": "demo_nyc_002", "name": "Little Italy Kitchen", "address": "156 Mulberry Street, New York, NY 10013", "cuisine": "Italian", "price_range": "$$", "rating": 4.5},
+            {"id": "demo_nyc_003", "name": "Harlem Soul", "address": "2340 Frederick Douglass Blvd, New York, NY 10027", "cuisine": "Soul Food", "price_range": "$$", "rating": 4.8},
         ],
     },
     "hair_salon": {
         "paris": [
-            {"id": "demo_paris_hair_001", "name": "Salon Chic", "address": "10 Rue du Faubourg, 75008 Paris", "subcategory": "Unisex", "rating": 4.6},
-            {"id": "demo_paris_hair_002", "name": "Cut & Color Studio", "address": "55 Avenue Montaigne, 75008 Paris", "subcategory": "Women", "rating": 4.9},
+            {"id": "demo_paris_hair_001", "name": "Salon Chic", "address": "10 Rue du Faubourg, 75008 Paris", "service": "Haircut", "rating": 4.6},
+            {"id": "demo_paris_hair_002", "name": "Cut & Color Studio", "address": "55 Avenue Montaigne, 75008 Paris", "service": "Coloring", "rating": 4.9},
         ],
         "london": [
-            {"id": "demo_london_hair_001", "name": "Blade & Fade", "address": "22 Soho Square, London W1", "subcategory": "Men", "rating": 4.7},
+            {"id": "demo_london_hair_001", "name": "Blade & Fade", "address": "22 Soho Square, London W1", "service": "Haircut", "rating": 4.7},
         ],
     },
     "spa": {
         "paris": [
-            {"id": "demo_paris_spa_001", "name": "Zen Retreat", "address": "18 Place Vendome, 75001 Paris", "subcategory": "Massage", "rating": 4.8},
+            {"id": "demo_paris_spa_001", "name": "Zen Retreat", "address": "18 Place Vendome, 75001 Paris", "service": "Massage", "rating": 4.8},
         ],
     },
 }
@@ -92,18 +92,13 @@ class DemoAdapter(BaseAdapter):
 
         # Apply filters
         if filters:
-            # Filter by subcategory (cuisine, service, activity, etc.)
-            subcategory_filter = (
-                filters.get("cuisine") or
-                filters.get("service") or
-                filters.get("activity")
-            )
-            if subcategory_filter:
-                filter_lower = subcategory_filter.lower()
-                venues = [
-                    v for v in venues
-                    if filter_lower in v.get("subcategory", "").lower()
-                ]
+            for filter_key, filter_value in filters.items():
+                if filter_value:
+                    filter_lower = filter_value.lower()
+                    venues = [
+                        v for v in venues
+                        if filter_lower in v.get(filter_key, "").lower()
+                    ]
 
         return [
             Venue(
@@ -111,9 +106,12 @@ class DemoAdapter(BaseAdapter):
                 name=v["name"],
                 address=v["address"],
                 category=category_lower,
-                subcategory=v.get("subcategory"),
                 provider=self.provider_name,
                 rating=v.get("rating"),
+                cuisine=v.get("cuisine"),
+                service=v.get("service"),
+                activity=v.get("activity"),
+                price_range=v.get("price_range"),
             )
             for v in venues
         ]
