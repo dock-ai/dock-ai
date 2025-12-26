@@ -1,0 +1,208 @@
+"""Booking Hub MCP Server - Restaurant booking aggregator."""
+
+from fastmcp import FastMCP
+
+from .adapters import ZenchefAdapter, get_adapter_for_provider
+from .registry import Registry
+
+
+# Initialize FastMCP server
+mcp = FastMCP(name="dock-ai")
+
+# Initialize adapters and registry
+zenchef = ZenchefAdapter()
+registry = Registry()
+
+
+@mcp.tool
+async def search_restaurants(
+    city: str,
+    date: str,
+    party_size: int,
+    cuisine: str | None = None
+) -> list[dict]:
+    """
+    Search for available restaurants in a city.
+
+    Aggregates results from multiple booking platforms (Zenchef, Planity, etc.)
+    to find the best dining options.
+
+    Args:
+        city: City where you want to dine (e.g., "Paris", "London", "New York")
+        date: Desired date in YYYY-MM-DD format (e.g., "2025-01-15")
+        party_size: Number of guests (e.g., 2, 4, 6)
+        cuisine: Optional cuisine type (e.g., "French", "Japanese", "Italian")
+
+    Returns:
+        List of restaurants with:
+        - id: Unique identifier
+        - name: Restaurant name
+        - address: Full address
+        - cuisine: Cuisine type
+        - rating: Rating (out of 5)
+        - provider: Source platform (zenchef, planity, etc.)
+
+    Example:
+        search_restaurants(city="Paris", date="2025-01-15", party_size=4, cuisine="French")
+    """
+    restaurants = await zenchef.search(
+        city=city,
+        date=date,
+        party_size=party_size,
+        cuisine=cuisine
+    )
+    return [r.model_dump() for r in restaurants]
+
+
+@mcp.tool
+async def check_availability(
+    restaurant_id: str,
+    date: str,
+    party_size: int
+) -> list[dict]:
+    """
+    Check available time slots for a restaurant.
+
+    Args:
+        restaurant_id: Restaurant identifier (from search_restaurants)
+        date: Date in YYYY-MM-DD format
+        party_size: Number of guests
+
+    Returns:
+        List of time slots with:
+        - time: Time in HH:MM format
+        - available: true/false
+        - covers_available: Number of seats available
+
+    Example:
+        check_availability(restaurant_id="rest_paris_001", date="2025-01-15", party_size=4)
+    """
+    mapping = registry.get_mapping(restaurant_id)
+    if mapping:
+        adapter = get_adapter_for_provider(mapping.provider)
+    else:
+        adapter = zenchef  # Default fallback
+
+    slots = await adapter.get_availability(
+        restaurant_id=restaurant_id,
+        date=date,
+        party_size=party_size
+    )
+    return [s.model_dump() for s in slots]
+
+
+@mcp.tool
+async def book_table(
+    restaurant_id: str,
+    date: str,
+    time: str,
+    party_size: int,
+    customer_name: str,
+    customer_email: str,
+    customer_phone: str
+) -> dict:
+    """
+    Book a table at a restaurant.
+
+    Args:
+        restaurant_id: Restaurant identifier
+        date: Date in YYYY-MM-DD format
+        time: Time in HH:MM format (e.g., "19:30")
+        party_size: Number of guests
+        customer_name: Full name of the guest
+        customer_email: Email address
+        customer_phone: Phone number with country code
+
+    Returns:
+        Booking confirmation with:
+        - id: Booking reference number
+        - restaurant_name: Restaurant name
+        - date, time, party_size: Booking details
+        - status: "confirmed" if successful
+
+    Example:
+        book_table(
+            restaurant_id="rest_paris_001",
+            date="2025-01-15",
+            time="19:30",
+            party_size=4,
+            customer_name="John Doe",
+            customer_email="john@example.com",
+            customer_phone="+33612345678"
+        )
+    """
+    mapping = registry.get_mapping(restaurant_id)
+    if mapping:
+        adapter = get_adapter_for_provider(mapping.provider)
+    else:
+        adapter = zenchef
+
+    booking = await adapter.book(
+        restaurant_id=restaurant_id,
+        date=date,
+        time=time,
+        party_size=party_size,
+        customer_name=customer_name,
+        customer_email=customer_email,
+        customer_phone=customer_phone
+    )
+    return booking.model_dump()
+
+
+@mcp.tool
+async def cancel_booking(booking_id: str) -> dict:
+    """
+    Cancel an existing booking.
+
+    Args:
+        booking_id: Booking reference (from book_table response)
+
+    Returns:
+        - success: true if cancelled successfully
+        - message: Confirmation message
+
+    Example:
+        cancel_booking(booking_id="booking_abc123")
+    """
+    success = await zenchef.cancel(booking_id)
+    return {
+        "success": success,
+        "booking_id": booking_id,
+        "message": "Booking cancelled successfully" if success else "Failed to cancel booking"
+    }
+
+
+@mcp.tool
+async def find_restaurant_by_domain(domain: str) -> dict | None:
+    """
+    Find a restaurant by its website domain.
+
+    Useful when an agent knows a restaurant's website but not which
+    booking platform it uses.
+
+    Args:
+        domain: Restaurant website domain (e.g., "lepetitparis.fr")
+
+    Returns:
+        Restaurant mapping or None if not found:
+        - restaurant_id: Internal identifier
+        - provider: Booking platform
+        - name: Restaurant name
+        - domain: Website domain
+
+    Example:
+        find_restaurant_by_domain(domain="sakurahouse-paris.fr")
+    """
+    mapping = registry.find_by_domain(domain)
+    if mapping:
+        return mapping.model_dump()
+    return None
+
+
+def main():
+    """Main entry point."""
+    mcp.run()
+
+
+if __name__ == "__main__":
+    main()
