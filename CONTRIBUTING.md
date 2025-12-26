@@ -15,15 +15,15 @@ This is the most valuable contribution you can make. Here's how to add support f
 
 ### Step 1: Create the Adapter File
 
-Create a new file in `src/booking_hub/adapters/`:
+Create a new file in `src/dock_ai/adapters/`:
 
 ```python
-# src/booking_hub/adapters/your_provider.py
+# src/dock_ai/adapters/your_provider.py
 """Your Provider booking adapter."""
 
 import os
 import httpx
-from .base import BaseAdapter, Restaurant, TimeSlot, Booking
+from .base import BaseAdapter, Venue, TimeSlot, Booking
 
 
 class YourProviderAdapter(BaseAdapter):
@@ -45,38 +45,38 @@ class YourProviderAdapter(BaseAdapter):
         date: str,
         party_size: int,
         cuisine: str | None = None
-    ) -> list[Restaurant]:
-        """Search for restaurants."""
+    ) -> list[Venue]:
+        """Search for venues."""
         # If no API key, return mock data for testing
         if not self.api_key:
             return self._mock_search(city, date, party_size, cuisine)
 
         # Real API call
         response = await self.client.get(
-            "/restaurants",
+            "/venues",
             params={"city": city, "date": date, "party_size": party_size}
         )
         response.raise_for_status()
         data = response.json()
 
         return [
-            Restaurant(
-                id=r["id"],
-                name=r["name"],
-                address=r["address"],
-                cuisine=r.get("cuisine", "Unknown"),
+            Venue(
+                id=v["id"],
+                name=v["name"],
+                address=v["address"],
+                cuisine=v.get("cuisine", "Unknown"),
                 provider=self.provider_name,
-                rating=r.get("rating"),
+                rating=v.get("rating"),
             )
-            for r in data["restaurants"]
+            for v in data["venues"]
         ]
 
-    def _mock_search(self, city: str, date: str, party_size: int, cuisine: str | None) -> list[Restaurant]:
+    def _mock_search(self, city: str, date: str, party_size: int, cuisine: str | None) -> list[Venue]:
         """Return mock data for testing without API key."""
         return [
-            Restaurant(
+            Venue(
                 id="your_provider_test_001",
-                name="Test Restaurant",
+                name="Test Venue",
                 address="123 Test Street",
                 cuisine="French",
                 provider=self.provider_name,
@@ -89,10 +89,10 @@ class YourProviderAdapter(BaseAdapter):
 
 ### Step 2: Register the Adapter
 
-Update `src/booking_hub/adapters/__init__.py`:
+Update `src/dock_ai/adapters/__init__.py`:
 
 ```python
-from .base import BaseAdapter, Restaurant, TimeSlot, Booking
+from .base import BaseAdapter, Venue, TimeSlot, Booking
 from .demo import DemoAdapter
 from .your_provider import YourProviderAdapter  # Add this
 
@@ -114,7 +114,7 @@ Create `tests/adapters/test_your_provider.py`:
 
 ```python
 import pytest
-from booking_hub.adapters.your_provider import YourProviderAdapter
+from dock_ai.adapters.your_provider import YourProviderAdapter
 
 @pytest.mark.asyncio
 async def test_search_mock_mode():
@@ -125,14 +125,14 @@ async def test_search_mock_mode():
     assert results[0].provider == "your_provider"
 
 @pytest.mark.asyncio
-async def test_search_returns_restaurant_objects():
-    """Test that search returns proper Restaurant objects."""
+async def test_search_returns_venue_objects():
+    """Test that search returns proper Venue objects."""
     adapter = YourProviderAdapter()
     results = await adapter.search("Paris", "2025-01-15", 2)
-    for r in results:
-        assert r.id is not None
-        assert r.name is not None
-        assert r.provider == "your_provider"
+    for v in results:
+        assert v.id is not None
+        assert v.name is not None
+        assert v.provider == "your_provider"
 ```
 
 ### Step 4: Document Environment Variables
@@ -162,9 +162,9 @@ All adapters must implement the `BaseAdapter` interface:
 class BaseAdapter(ABC):
     provider_name: str
 
-    async def search(self, city, date, party_size, cuisine=None) -> list[Restaurant]
-    async def get_availability(self, restaurant_id, date, party_size) -> list[TimeSlot]
-    async def book(self, restaurant_id, date, time, party_size, customer_name, customer_email, customer_phone) -> Booking
+    async def search(self, city, date, party_size, cuisine=None) -> list[Venue]
+    async def get_availability(self, venue_id, date, party_size) -> list[TimeSlot]
+    async def book(self, venue_id, date, time, party_size, customer_name, customer_email, customer_phone) -> Booking
     async def cancel(self, booking_id) -> bool
 ```
 

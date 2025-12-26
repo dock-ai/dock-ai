@@ -9,7 +9,7 @@ description = "MCP server aggregating multiple booking platforms (restaurants, a
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
-keywords = ["mcp", "booking", "restaurant", "ai", "agent"]
+keywords = ["mcp", "booking", "venue", "ai", "agent"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -41,4 +41,4 @@ Issues = "https://github.com/dock-ai/dock-ai/issues"
 where = ["src"]
 
 [project.scripts]
-dock-ai = "booking_hub.server:main"
+dock-ai = "dock_ai.server:main"

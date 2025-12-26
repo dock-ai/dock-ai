@@ -13,11 +13,11 @@ An MCP server that aggregates multiple booking platforms behind a unified interf
 │  DOCK-AI MCP                                                    │
 │                                                                 │
 │  Tools:                                                         │
-│  ├── search_restaurants      - Search restaurants by city      │
+│  ├── search_venues           - Search venues by city           │
 │  ├── check_availability      - Check available time slots      │
-│  ├── book_table              - Make a reservation              │
-│  ├── cancel_booking          - Cancel a reservation            │
-│  └── find_restaurant_by_domain - Find by website               │
+│  ├── book                    - Make a reservation              │
+│  ├── cancel                  - Cancel a reservation            │
+│  └── find_venue_by_domain    - Find by website                 │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
                               │
@@ -65,7 +65,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
   "mcpServers": {
     "dock-ai": {
       "command": "/path/to/dock-ai/.venv/bin/python",
-      "args": ["-m", "booking_hub.server"],
+      "args": ["-m", "dock_ai.server"],
       "cwd": "/path/to/dock-ai",
       "env": {
         "PYTHONPATH": "/path/to/dock-ai/src",
@@ -81,16 +81,16 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 Restart Claude Desktop and try:
 
-> "Search for French restaurants in Paris for 4 people on January 15th"
+> "Search for venues in Paris for 4 people on January 15th"
 
 ## Available Tools
 
-### `search_restaurants`
+### `search_venues`
 
-Search for restaurants by city, date, and party size.
+Search for venues by city, date, and party size.
 
 ```python
-search_restaurants(
+search_venues(
     city="Paris",
     date="2025-01-15",
     party_size=4,
@@ -100,23 +100,23 @@ search_restaurants(
 
 ### `check_availability`
 
-Check available time slots for a specific restaurant.
+Check available time slots for a specific venue.
 
 ```python
 check_availability(
-    restaurant_id="demo_paris_001",
+    venue_id="demo_paris_001",
     date="2025-01-15",
     party_size=4
 )
 ```
 
-### `book_table`
+### `book`
 
 Make a reservation.
 
 ```python
-book_table(
-    restaurant_id="demo_paris_001",
+book(
+    venue_id="demo_paris_001",
     date="2025-01-15",
     time="19:30",
     party_size=4,
@@ -126,34 +126,34 @@ book_table(
 )
 ```
 
-### `cancel_booking`
+### `cancel`
 
 Cancel an existing reservation.
 
 ```python
-cancel_booking(booking_id="booking_abc123")
+cancel(booking_id="booking_abc123")
 ```
 
-### `find_restaurant_by_domain`
+### `find_venue_by_domain`
 
-Find a restaurant by its website domain.
+Find a venue by its website domain.
 
 ```python
-find_restaurant_by_domain(domain="restaurant.example.com")
+find_venue_by_domain(domain="venue.example.com")
 ```
 
 ## Architecture
 
 ```
 dock-ai/
-├── src/booking_hub/
+├── src/dock_ai/
 │   ├── server.py              # MCP server with 5 tools
 │   ├── adapters/
 │   │   ├── base.py            # Abstract interface
 │   │   └── demo.py            # Demo adapter (mock data)
 │   └── registry/
 │       ├── database.py        # Supabase client
-│       └── registry.py        # Restaurant → provider mapping
+│       └── registry.py        # Venue → provider mapping
 ├── supabase/
 │   └── migrations/            # Database schema
 ├── CONTRIBUTING.md            # How to add adapters

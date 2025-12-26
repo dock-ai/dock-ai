@@ -15,55 +15,55 @@ registry = Registry()
 
 
 @mcp.tool
-async def search_restaurants(
+async def search_venues(
     city: str,
     date: str,
     party_size: int,
     cuisine: str | None = None
 ) -> list[dict]:
     """
-    Search for available restaurants in a city.
+    Search for available venues in a city.
 
     Aggregates results from multiple booking platforms to find the best options.
 
     Args:
-        city: City where you want to dine (e.g., "Paris", "London", "New York")
+        city: City to search (e.g., "Paris", "London", "New York")
         date: Desired date in YYYY-MM-DD format (e.g., "2025-01-15")
         party_size: Number of guests (e.g., 2, 4, 6)
-        cuisine: Optional cuisine type (e.g., "French", "Japanese", "Italian")
+        cuisine: Optional cuisine/category filter (e.g., "French", "Japanese")
 
     Returns:
-        List of restaurants with:
+        List of venues with:
         - id: Unique identifier
-        - name: Restaurant name
+        - name: Venue name
         - address: Full address
-        - cuisine: Cuisine type
+        - cuisine: Category type
         - rating: Rating (out of 5)
         - provider: Source platform
 
     Example:
-        search_restaurants(city="Paris", date="2025-01-15", party_size=4, cuisine="French")
+        search_venues(city="Paris", date="2025-01-15", party_size=4, cuisine="French")
     """
-    restaurants = await demo_adapter.search(
+    venues = await demo_adapter.search(
         city=city,
         date=date,
         party_size=party_size,
         cuisine=cuisine
     )
-    return [r.model_dump() for r in restaurants]
+    return [v.model_dump() for v in venues]
 
 
 @mcp.tool
 async def check_availability(
-    restaurant_id: str,
+    venue_id: str,
     date: str,
     party_size: int
 ) -> list[dict]:
     """
-    Check available time slots for a restaurant.
+    Check available time slots for a venue.
 
     Args:
-        restaurant_id: Restaurant identifier (from search_restaurants)
+        venue_id: Venue identifier (from search_venues)
         date: Date in YYYY-MM-DD format
         party_size: Number of guests
 
@@ -74,16 +74,16 @@ async def check_availability(
         - covers_available: Number of seats available
 
     Example:
-        check_availability(restaurant_id="demo_paris_001", date="2025-01-15", party_size=4)
+        check_availability(venue_id="demo_paris_001", date="2025-01-15", party_size=4)
     """
-    mapping = registry.get_mapping(restaurant_id)
+    mapping = registry.get_mapping(venue_id)
     if mapping:
         adapter = get_adapter_for_provider(mapping.provider)
     else:
         adapter = demo_adapter  # Default fallback
 
     slots = await adapter.get_availability(
-        restaurant_id=restaurant_id,
+        restaurant_id=venue_id,
         date=date,
         party_size=party_size
     )
@@ -91,8 +91,8 @@ async def check_availability(
 
 
 @mcp.tool
-async def book_table(
-    restaurant_id: str,
+async def book(
+    venue_id: str,
     date: str,
     time: str,
     party_size: int,
@@ -101,10 +101,10 @@ async def book_table(
     customer_phone: str
 ) -> dict:
     """
-    Book a table at a restaurant.
+    Book a slot at a venue.
 
     Args:
-        restaurant_id: Restaurant identifier
+        venue_id: Venue identifier
         date: Date in YYYY-MM-DD format
         time: Time in HH:MM format (e.g., "19:30")
         party_size: Number of guests
@@ -115,13 +115,13 @@ async def book_table(
     Returns:
         Booking confirmation with:
         - id: Booking reference number
-        - restaurant_name: Restaurant name
+        - venue_name: Venue name
         - date, time, party_size: Booking details
         - status: "confirmed" if successful
 
     Example:
-        book_table(
-            restaurant_id="demo_paris_001",
+        book(
+            venue_id="demo_paris_001",
             date="2025-01-15",
             time="19:30",
             party_size=4,
@@ -130,14 +130,14 @@ async def book_table(
             customer_phone="+33612345678"
         )
     """
-    mapping = registry.get_mapping(restaurant_id)
+    mapping = registry.get_mapping(venue_id)
     if mapping:
         adapter = get_adapter_for_provider(mapping.provider)
     else:
         adapter = demo_adapter
 
     booking = await adapter.book(
-        restaurant_id=restaurant_id,
+        restaurant_id=venue_id,
         date=date,
         time=time,
         party_size=party_size,
@@ -149,19 +149,19 @@ async def book_table(
 
 
 @mcp.tool
-async def cancel_booking(booking_id: str) -> dict:
+async def cancel(booking_id: str) -> dict:
     """
     Cancel an existing booking.
 
     Args:
-        booking_id: Booking reference (from book_table response)
+        booking_id: Booking reference (from book response)
 
     Returns:
         - success: true if cancelled successfully
         - message: Confirmation message
 
     Example:
-        cancel_booking(booking_id="booking_abc123")
+        cancel(booking_id="booking_abc123")
     """
     success = await demo_adapter.cancel(booking_id)
     return {
@@ -172,25 +172,25 @@ async def cancel_booking(booking_id: str) -> dict:
 
 
 @mcp.tool
-async def find_restaurant_by_domain(domain: str) -> dict | None:
+async def find_venue_by_domain(domain: str) -> dict | None:
     """
-    Find a restaurant by its website domain.
+    Find a venue by its website domain.
 
-    Useful when an agent knows a restaurant's website but not which
+    Useful when an agent knows a venue's website but not which
     booking platform it uses.
 
     Args:
-        domain: Restaurant website domain (e.g., "restaurant-example.com")
+        domain: Venue website domain (e.g., "venue-example.com")
 
     Returns:
-        Restaurant mapping or None if not found:
-        - restaurant_id: Internal identifier
+        Venue mapping or None if not found:
+        - venue_id: Internal identifier
         - provider: Booking platform
-        - name: Restaurant name
+        - name: Venue name
         - domain: Website domain
 
     Example:
-        find_restaurant_by_domain(domain="restaurant-example.com")
+        find_venue_by_domain(domain="venue-example.com")
     """
     mapping = registry.find_by_domain(domain)
     if mapping:
