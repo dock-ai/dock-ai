@@ -1,4 +1,4 @@
-"""Seed data for restaurant registry.
+"""Seed data for venue registry.
 
 This data is used for:
 - Initial database seeding
@@ -6,91 +6,90 @@ This data is used for:
 - Documentation examples
 
 To seed the database, run the SQL migration in supabase/migrations/
-or use the seed script: python -m booking_hub.scripts.seed
 """
 
-SEED_RESTAURANTS = [
-    # Paris restaurants
+SEED_VENUES = [
+    # Paris venues
     {
-        "restaurant_id": "rest_paris_001",
-        "provider": "zenchef",
-        "external_id": "zc_lepetitparis_001",
-        "name": "Le Petit Paris",
-        "domain": "lepetitparis.fr",
+        "venue_id": "demo_paris_001",
+        "provider": "demo",
+        "external_id": "ext_goldenfork_001",
+        "name": "The Golden Fork",
+        "domain": "goldenfork.example.com",
         "city": "Paris",
     },
     {
-        "restaurant_id": "rest_paris_002",
-        "provider": "zenchef",
-        "external_id": "zc_latoureiffel_002",
-        "name": "La Tour Eiffel Bistro",
-        "domain": "latoureiffelbistro.com",
+        "venue_id": "demo_paris_002",
+        "provider": "demo",
+        "external_id": "ext_urbangarden_002",
+        "name": "Urban Garden",
+        "domain": "urbangarden.example.com",
         "city": "Paris",
     },
     {
-        "restaurant_id": "rest_paris_003",
-        "provider": "zenchef",
-        "external_id": "zc_sakurahouse_003",
-        "name": "Sakura House",
-        "domain": "sakurahouse-paris.fr",
+        "venue_id": "demo_paris_003",
+        "provider": "demo",
+        "external_id": "ext_sakurablossom_003",
+        "name": "Sakura Blossom",
+        "domain": "sakurablossom.example.com",
         "city": "Paris",
     },
     {
-        "restaurant_id": "rest_paris_004",
-        "provider": "zenchef",
-        "external_id": "zc_labelleassiette_004",
-        "name": "La Belle Assiette",
+        "venue_id": "demo_paris_004",
+        "provider": "demo",
+        "external_id": "ext_blueoyster_004",
+        "name": "The Blue Oyster",
         "domain": None,
         "city": "Paris",
     },
-    # Lyon restaurants
+    # London venues
     {
-        "restaurant_id": "rest_lyon_001",
-        "provider": "zenchef",
-        "external_id": "zc_bouchonlyonnais_001",
-        "name": "Le Bouchon Lyonnais",
-        "domain": "bouchonlyonnais.fr",
-        "city": "Lyon",
+        "venue_id": "demo_london_001",
+        "provider": "demo",
+        "external_id": "ext_gildedplate_001",
+        "name": "The Gilded Plate",
+        "domain": "gildedplate.example.com",
+        "city": "London",
     },
     {
-        "restaurant_id": "rest_lyon_002",
-        "provider": "zenchef",
-        "external_id": "zc_chezpaul_002",
-        "name": "Chez Paul",
+        "venue_id": "demo_london_002",
+        "provider": "demo",
+        "external_id": "ext_spiceroute_002",
+        "name": "Spice Route",
         "domain": None,
-        "city": "Lyon",
+        "city": "London",
     },
     {
-        "restaurant_id": "rest_lyon_003",
-        "provider": "zenchef",
-        "external_id": "zc_trattorialyon_003",
-        "name": "Trattoria Lyon",
-        "domain": "trattoria-lyon.com",
-        "city": "Lyon",
+        "venue_id": "demo_london_003",
+        "provider": "demo",
+        "external_id": "ext_greentable_003",
+        "name": "The Green Table",
+        "domain": "greentable.example.com",
+        "city": "London",
     },
-    # Marseille restaurants
+    # New York venues
     {
-        "restaurant_id": "rest_marseille_001",
-        "provider": "zenchef",
-        "external_id": "zc_levieuxport_001",
-        "name": "Le Vieux Port",
-        "domain": "vieuxport-restaurant.fr",
-        "city": "Marseille",
-    },
-    {
-        "restaurant_id": "rest_marseille_002",
-        "provider": "zenchef",
-        "external_id": "zc_bouillabaisseor_002",
-        "name": "Bouillabaisse d'Or",
-        "domain": "bouillabaissedor.com",
-        "city": "Marseille",
+        "venue_id": "demo_nyc_001",
+        "provider": "demo",
+        "external_id": "ext_manhattannights_001",
+        "name": "Manhattan Nights",
+        "domain": "manhattannights.example.com",
+        "city": "New York",
     },
     {
-        "restaurant_id": "rest_marseille_003",
-        "provider": "zenchef",
-        "external_id": "zc_lamaisonbleue_003",
-        "name": "La Maison Bleue",
+        "venue_id": "demo_nyc_002",
+        "provider": "demo",
+        "external_id": "ext_littleitaly_002",
+        "name": "Little Italy Kitchen",
+        "domain": "littleitalykitchen.example.com",
+        "city": "New York",
+    },
+    {
+        "venue_id": "demo_nyc_003",
+        "provider": "demo",
+        "external_id": "ext_harlemsoul_003",
+        "name": "Harlem Soul",
         "domain": None,
-        "city": "Marseille",
+        "city": "New York",
     },
 ]

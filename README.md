@@ -23,9 +23,10 @@ An MCP server that aggregates multiple booking platforms behind a unified interf
                               │
         ┌─────────────────────┼─────────────────────┐
         ▼                     ▼                     ▼
-   ┌─────────┐           ┌─────────┐           ┌─────────┐
-   │ Zenchef │           │ Planity │           │ TheFork │
-   └─────────┘           └─────────┘           └─────────┘
+   ┌──────────┐         ┌──────────┐         ┌──────────┐
+   │ Provider │         │ Provider │         │ Provider │
+   │    A     │         │    B     │         │    C     │
+   └──────────┘         └──────────┘         └──────────┘
 ```
 
 ## Quick Start
@@ -103,7 +104,7 @@ Check available time slots for a specific restaurant.
 
 ```python
 check_availability(
-    restaurant_id="rest_paris_001",
+    restaurant_id="demo_paris_001",
     date="2025-01-15",
     party_size=4
 )
@@ -115,7 +116,7 @@ Make a reservation.
 
 ```python
 book_table(
-    restaurant_id="rest_paris_001",
+    restaurant_id="demo_paris_001",
     date="2025-01-15",
     time="19:30",
     party_size=4,
@@ -138,7 +139,7 @@ cancel_booking(booking_id="booking_abc123")
 Find a restaurant by its website domain.
 
 ```python
-find_restaurant_by_domain(domain="lepetitparis.fr")
+find_restaurant_by_domain(domain="restaurant.example.com")
 ```
 
 ## Architecture
@@ -149,7 +150,7 @@ dock-ai/
 │   ├── server.py              # MCP server with 5 tools
 │   ├── adapters/
 │   │   ├── base.py            # Abstract interface
-│   │   └── zenchef.py         # Zenchef adapter (mock)
+│   │   └── demo.py            # Demo adapter (mock data)
 │   └── registry/
 │       ├── database.py        # Supabase client
 │       └── registry.py        # Restaurant → provider mapping
@@ -164,24 +165,14 @@ dock-ai/
 Want to add support for a new booking platform? See [CONTRIBUTING.md](CONTRIBUTING.md) for a step-by-step guide.
 
 ```python
-# Example: Adding Planity support
-class PlanityAdapter(BaseAdapter):
-    provider_name = "planity"
+# Example: Adding a new provider
+class YourProviderAdapter(BaseAdapter):
+    provider_name = "your_provider"
 
     async def search(self, city, date, party_size, cuisine=None):
-        # Call Planity API
+        # Call your provider's API
         ...
 ```
-
-## Supported Platforms
-
-| Platform | Status | Notes |
-|----------|--------|-------|
-| Zenchef | Mock | Ready for production integration |
-| Planity | Planned | Looking for API partnership |
-| TheFork | Planned | Looking for API partnership |
-| OpenTable | Planned | Looking for API partnership |
-| Resy | Planned | Looking for API partnership |
 
 ## Contributing
 

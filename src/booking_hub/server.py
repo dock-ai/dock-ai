@@ -1,8 +1,8 @@
-"""Booking Hub MCP Server - Restaurant booking aggregator."""
+"""Dock AI MCP Server - Booking platform aggregator."""
 
 from fastmcp import FastMCP
 
-from .adapters import ZenchefAdapter, get_adapter_for_provider
+from .adapters import DemoAdapter, get_adapter_for_provider
 from .registry import Registry
 
 
@@ -10,7 +10,7 @@ from .registry import Registry
 mcp = FastMCP(name="dock-ai")
 
 # Initialize adapters and registry
-zenchef = ZenchefAdapter()
+demo_adapter = DemoAdapter()
 registry = Registry()
 
 
@@ -24,8 +24,7 @@ async def search_restaurants(
     """
     Search for available restaurants in a city.
 
-    Aggregates results from multiple booking platforms (Zenchef, Planity, etc.)
-    to find the best dining options.
+    Aggregates results from multiple booking platforms to find the best options.
 
     Args:
         city: City where you want to dine (e.g., "Paris", "London", "New York")
@@ -40,12 +39,12 @@ async def search_restaurants(
         - address: Full address
         - cuisine: Cuisine type
         - rating: Rating (out of 5)
-        - provider: Source platform (zenchef, planity, etc.)
+        - provider: Source platform
 
     Example:
         search_restaurants(city="Paris", date="2025-01-15", party_size=4, cuisine="French")
     """
-    restaurants = await zenchef.search(
+    restaurants = await demo_adapter.search(
         city=city,
         date=date,
         party_size=party_size,
@@ -75,13 +74,13 @@ async def check_availability(
         - covers_available: Number of seats available
 
     Example:
-        check_availability(restaurant_id="rest_paris_001", date="2025-01-15", party_size=4)
+        check_availability(restaurant_id="demo_paris_001", date="2025-01-15", party_size=4)
     """
     mapping = registry.get_mapping(restaurant_id)
     if mapping:
         adapter = get_adapter_for_provider(mapping.provider)
     else:
-        adapter = zenchef  # Default fallback
+        adapter = demo_adapter  # Default fallback
 
     slots = await adapter.get_availability(
         restaurant_id=restaurant_id,
@@ -122,7 +121,7 @@ async def book_table(
 
     Example:
         book_table(
-            restaurant_id="rest_paris_001",
+            restaurant_id="demo_paris_001",
             date="2025-01-15",
             time="19:30",
             party_size=4,
@@ -135,7 +134,7 @@ async def book_table(
     if mapping:
         adapter = get_adapter_for_provider(mapping.provider)
     else:
-        adapter = zenchef
+        adapter = demo_adapter
 
     booking = await adapter.book(
         restaurant_id=restaurant_id,
@@ -164,7 +163,7 @@ async def cancel_booking(booking_id: str) -> dict:
     Example:
         cancel_booking(booking_id="booking_abc123")
     """
-    success = await zenchef.cancel(booking_id)
+    success = await demo_adapter.cancel(booking_id)
     return {
         "success": success,
         "booking_id": booking_id,
@@ -181,7 +180,7 @@ async def find_restaurant_by_domain(domain: str) -> dict | None:
     booking platform it uses.
 
     Args:
-        domain: Restaurant website domain (e.g., "lepetitparis.fr")
+        domain: Restaurant website domain (e.g., "restaurant-example.com")
 
     Returns:
         Restaurant mapping or None if not found:
@@ -191,7 +190,7 @@ async def find_restaurant_by_domain(domain: str) -> dict | None:
         - domain: Website domain
 
     Example:
-        find_restaurant_by_domain(domain="sakurahouse-paris.fr")
+        find_restaurant_by_domain(domain="restaurant-example.com")
     """
     mapping = registry.find_by_domain(domain)
     if mapping:

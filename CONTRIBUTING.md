@@ -18,22 +18,22 @@ This is the most valuable contribution you can make. Here's how to add support f
 Create a new file in `src/booking_hub/adapters/`:
 
 ```python
-# src/booking_hub/adapters/planity.py
-"""Planity booking provider adapter."""
+# src/booking_hub/adapters/your_provider.py
+"""Your Provider booking adapter."""
 
 import os
 import httpx
 from .base import BaseAdapter, Restaurant, TimeSlot, Booking
 
 
-class PlanityAdapter(BaseAdapter):
-    """Planity booking provider adapter."""
+class YourProviderAdapter(BaseAdapter):
+    """Your Provider booking adapter."""
 
-    provider_name = "planity"
+    provider_name = "your_provider"
 
     def __init__(self):
-        self.api_key = os.environ.get("PLANITY_API_KEY")
-        self.base_url = "https://api.planity.com/v1"
+        self.api_key = os.environ.get("YOUR_PROVIDER_API_KEY")
+        self.base_url = "https://api.yourprovider.com/v1"
         self.client = httpx.AsyncClient(
             base_url=self.base_url,
             headers={"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}
@@ -75,7 +75,7 @@ class PlanityAdapter(BaseAdapter):
         """Return mock data for testing without API key."""
         return [
             Restaurant(
-                id="planity_test_001",
+                id="your_provider_test_001",
                 name="Test Restaurant",
                 address="123 Test Street",
                 cuisine="French",
@@ -93,12 +93,12 @@ Update `src/booking_hub/adapters/__init__.py`:
 
 ```python
 from .base import BaseAdapter, Restaurant, TimeSlot, Booking
-from .zenchef import ZenchefAdapter
-from .planity import PlanityAdapter  # Add this
+from .demo import DemoAdapter
+from .your_provider import YourProviderAdapter  # Add this
 
 _adapters = {
-    "zenchef": ZenchefAdapter,
-    "planity": PlanityAdapter,  # Add this
+    "demo": DemoAdapter,
+    "your_provider": YourProviderAdapter,  # Add this
 }
 
 def get_adapter_for_provider(provider: str) -> BaseAdapter:
@@ -110,29 +110,29 @@ def get_adapter_for_provider(provider: str) -> BaseAdapter:
 
 ### Step 3: Add Tests
 
-Create `tests/adapters/test_planity.py`:
+Create `tests/adapters/test_your_provider.py`:
 
 ```python
 import pytest
-from booking_hub.adapters.planity import PlanityAdapter
+from booking_hub.adapters.your_provider import YourProviderAdapter
 
 @pytest.mark.asyncio
 async def test_search_mock_mode():
     """Test search works in mock mode (no API key)."""
-    adapter = PlanityAdapter()
+    adapter = YourProviderAdapter()
     results = await adapter.search("Paris", "2025-01-15", 4)
     assert len(results) > 0
-    assert results[0].provider == "planity"
+    assert results[0].provider == "your_provider"
 
 @pytest.mark.asyncio
 async def test_search_returns_restaurant_objects():
     """Test that search returns proper Restaurant objects."""
-    adapter = PlanityAdapter()
+    adapter = YourProviderAdapter()
     results = await adapter.search("Paris", "2025-01-15", 2)
     for r in results:
         assert r.id is not None
         assert r.name is not None
-        assert r.provider == "planity"
+        assert r.provider == "your_provider"
 ```
 
 ### Step 4: Document Environment Variables
@@ -140,18 +140,18 @@ async def test_search_returns_restaurant_objects():
 Add to `.env.example`:
 
 ```bash
-# Planity API (optional - runs in mock mode without)
-PLANITY_API_KEY=
+# Your Provider API (optional - runs in mock mode without)
+YOUR_PROVIDER_API_KEY=
 ```
 
 ### Step 5: Submit a Pull Request
 
 1. Fork the repository
-2. Create a feature branch: `git checkout -b add-planity-adapter`
+2. Create a feature branch: `git checkout -b add-your-provider-adapter`
 3. Make your changes
 4. Run tests: `pytest`
-5. Commit: `git commit -m "Add Planity adapter"`
-6. Push: `git push origin add-planity-adapter`
+5. Commit: `git commit -m "Add YourProvider adapter"`
+6. Push: `git push origin add-your-provider-adapter`
 7. Open a Pull Request
 
 ## Adapter Interface

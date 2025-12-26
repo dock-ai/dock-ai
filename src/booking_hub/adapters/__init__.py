@@ -1,7 +1,7 @@
-"""Restaurant booking provider adapters."""
+"""Booking provider adapters."""
 
 from .base import BaseAdapter, Restaurant, TimeSlot, Booking
-from .zenchef import ZenchefAdapter
+from .demo import DemoAdapter
 
 
 def get_adapter_for_provider(provider: str, **kwargs) -> BaseAdapter:
@@ -9,7 +9,7 @@ def get_adapter_for_provider(provider: str, **kwargs) -> BaseAdapter:
     Get an adapter instance for a booking provider.
 
     Args:
-        provider: Provider name (e.g., "zenchef", "planity")
+        provider: Provider name (e.g., "demo", "your_provider")
         **kwargs: Additional arguments to pass to the adapter constructor
 
     Returns:
@@ -19,11 +19,9 @@ def get_adapter_for_provider(provider: str, **kwargs) -> BaseAdapter:
         ValueError: If the provider is not supported
     """
     adapters = {
-        "zenchef": ZenchefAdapter,
-        # Add more providers here as they're implemented
-        # "planity": PlanityAdapter,
-        # "resy": ResyAdapter,
-        # "opentable": OpenTableAdapter,
+        "demo": DemoAdapter,
+        # Add your provider adapters here:
+        # "your_provider": YourProviderAdapter,
     }
 
     adapter_class = adapters.get(provider.lower())
@@ -42,6 +40,6 @@ __all__ = [
     "Restaurant",
     "TimeSlot",
     "Booking",
-    "ZenchefAdapter",
+    "DemoAdapter",
     "get_adapter_for_provider",
 ]
