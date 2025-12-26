@@ -31,9 +31,8 @@ class Booking(BaseModel):
     id: str
     venue_id: str
     venue_name: str
-    date: str
-    time: str
-    party_size: int
+    category: str
+    params: dict  # Category-specific params (date, time, party_size, service, etc.)
     customer_name: str
     status: str  # "confirmed", "cancelled"
 
@@ -71,16 +70,16 @@ class BaseAdapter(ABC):
     async def get_availability(
         self,
         venue_id: str,
-        date: str,
-        party_size: int
+        category: str,
+        params: dict
     ) -> list[TimeSlot]:
         """
         Get available time slots for a venue.
 
         Args:
             venue_id: Venue identifier
-            date: Date in YYYY-MM-DD format
-            party_size: Number of people
+            category: Business category
+            params: Category-specific parameters (date, party_size, service, etc.)
 
         Returns:
             List of time slots with availability
@@ -91,9 +90,8 @@ class BaseAdapter(ABC):
     async def book(
         self,
         venue_id: str,
-        date: str,
-        time: str,
-        party_size: int,
+        category: str,
+        params: dict,
         customer_name: str,
         customer_email: str,
         customer_phone: str
@@ -103,9 +101,8 @@ class BaseAdapter(ABC):
 
         Args:
             venue_id: Venue identifier
-            date: Date in YYYY-MM-DD format
-            time: Time in HH:MM format
-            party_size: Number of people
+            category: Business category
+            params: Category-specific parameters (date, time, party_size, service, etc.)
             customer_name: Customer's full name
             customer_email: Customer's email address
             customer_phone: Customer's phone number

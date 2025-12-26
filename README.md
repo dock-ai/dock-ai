@@ -88,17 +88,23 @@ Restart Claude Desktop and try:
 
 ### `get_filters`
 
-Get available search filters for a business category. Call this first!
+Get required parameters for a category and tool. **Call this before each tool!**
 
 ```python
-get_filters(category="restaurant")
-# Returns: {"cuisine": ["French", "Japanese", ...], "price_range": ["$", "$$", ...]}
+# Search filters for restaurants
+get_filters(category="restaurant", tool="search")
+# → {"cuisine": ["French", ...], "price_range": ["$", ...]}
 
-get_filters(category="hair_salon")
-# Returns: {"service": ["Haircut", "Coloring", ...], "gender": ["Men", "Women"]}
+# Booking params for restaurants (has party_size)
+get_filters(category="restaurant", tool="book")
+# → {"party_size": {"min": 1, "max": 20}, "date": {...}, "time": {...}}
+
+# Booking params for hair salons (NO party_size!)
+get_filters(category="hair_salon", tool="book")
+# → {"service": {...}, "date": {...}, "time": {...}, "duration": {...}}
 ```
 
-**Supported categories:** `restaurant`, `hair_salon`, `spa`, `fitness`
+**Categories:** `restaurant`, `hair_salon`, `spa`, `fitness`
 
 ### `search_venues`
 
@@ -116,28 +122,46 @@ search_venues(
 
 ### `check_availability`
 
-Check available time slots for a specific venue.
+Check available time slots. Parameters vary by category!
 
 ```python
+# Restaurant (uses party_size)
 check_availability(
     venue_id="demo_paris_001",
-    date="2025-01-15",
-    party_size=4
+    category="restaurant",
+    params={"date": "2025-01-15", "party_size": 4}
+)
+
+# Hair salon (uses service, no party_size)
+check_availability(
+    venue_id="demo_paris_hair_001",
+    category="hair_salon",
+    params={"date": "2025-01-15", "service": "Haircut"}
 )
 ```
 
 ### `book`
 
-Make a reservation.
+Make a reservation. Parameters vary by category!
 
 ```python
+# Restaurant booking
 book(
     venue_id="demo_paris_001",
-    date="2025-01-15",
-    time="19:30",
-    party_size=4,
+    category="restaurant",
+    params={"date": "2025-01-15", "time": "19:30", "party_size": 4},
     customer_name="John Doe",
     customer_email="john@example.com",
+    customer_phone="+33612345678"
+)
+
+# Hair salon booking
+book(
+    venue_id="demo_paris_hair_001",
+    category="hair_salon",
+    params={"date": "2025-01-15", "time": "14:00", "service": "Haircut"},
+    customer_name="Jane Doe",
+    customer_email="jane@example.com",
     customer_phone="+33612345678"
 )
 ```

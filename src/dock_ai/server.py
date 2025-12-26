@@ -3,7 +3,7 @@
 from fastmcp import FastMCP
 
 from .adapters import DemoAdapter, get_adapter_for_provider
-from .categories import get_filters_for_category, get_available_categories
+from .categories import get_filters_for_category, get_available_categories, get_available_tools
 from .registry import Registry
 
 # Initialize FastMCP server
@@ -12,14 +12,22 @@ mcp = FastMCP(
     instructions="""
         Dock AI aggregates multiple booking platforms into a unified interface.
 
-        IMPORTANT: Before calling search_venues, always call get_filters(category)
-        first to discover available filter options for that business category.
+        IMPORTANT: Before each tool call, use get_filters(category, tool) to discover
+        the required parameters for that category.
 
-        Typical flow:
-        1. get_filters(category="restaurant") → see available cuisines, price ranges
-        2. search_venues(category="restaurant", city="Paris", ...) → find venues
-        3. check_availability(venue_id, date, party_size) → see time slots
-        4. book(...) → make reservation
+        Flow:
+        1. get_filters(category, "search") → see available search filters
+        2. search_venues(category, city, date, party_size, filters) → find venues
+        3. get_filters(category, "check_availability") → see required params
+        4. check_availability(venue_id, category, params) → see time slots
+        5. get_filters(category, "book") → see required booking params
+        6. book(venue_id, category, params, customer_info) → make reservation
+
+        Parameters vary by category:
+        - restaurant: uses party_size
+        - hair_salon: uses service, duration (no party_size)
+        - spa: uses service, duration
+        - fitness: uses activity
     """
 )
 
@@ -29,33 +37,43 @@ registry = Registry()
 
 
 @mcp.tool
-async def get_filters(category: str) -> dict:
+async def get_filters(category: str, tool: str = "search") -> dict:
     """
-    Get available search filters for a business category.
+    Get available parameters for a category and tool.
 
-    Call this BEFORE search_venues to discover what filters are available.
+    Call this BEFORE using search_venues, check_availability, or book
+    to discover what parameters are required for that category.
 
     Args:
         category: Business category (restaurant, hair_salon, spa, fitness)
+        tool: Tool name (search, check_availability, book)
 
     Returns:
-        Dictionary of filter names and their possible values.
+        Dictionary of parameter names and their possible values or schema.
 
-    Example:
-        get_filters(category="restaurant")
-        # Returns: {"cuisine": ["French", "Japanese", ...], "price_range": ["$", "$$", ...]}
+    Examples:
+        get_filters(category="restaurant", tool="search")
+        # Returns: {"cuisine": ["French", ...], "price_range": ["$", ...]}
+
+        get_filters(category="restaurant", tool="book")
+        # Returns: {"party_size": {"type": "integer", "min": 1, "max": 20}, ...}
+
+        get_filters(category="hair_salon", tool="book")
+        # Returns: {"service": {...}, "duration": {...}}  # No party_size!
     """
-    filters = get_filters_for_category(category)
+    filters = get_filters_for_category(category, tool)
 
     if not filters:
         return {
-            "error": f"Unknown category: {category}",
-            "available_categories": get_available_categories()
+            "error": f"Unknown category '{category}' or tool '{tool}'",
+            "available_categories": get_available_categories(),
+            "available_tools": get_available_tools()
         }
 
     return {
         "category": category.lower().replace(" ", "_"),
-        "filters": filters
+        "tool": tool.lower(),
+        "parameters": filters
     }
 
 
@@ -111,36 +129,54 @@ async def search_venues(
 @mcp.tool
 async def check_availability(
     venue_id: str,
-    date: str,
-    party_size: int
+    category: str,
+    params: dict
 ) -> list[dict]:
     """
     Check available time slots for a venue.
 
+    IMPORTANT: Call get_filters(category, "check_availability") first
+    to see required parameters for this category.
+
     Args:
         venue_id: Venue identifier (from search_venues)
-        date: Date in YYYY-MM-DD format
-        party_size: Number of guests
+        category: Business category (restaurant, hair_salon, spa, fitness)
+        params: Category-specific parameters from get_filters:
+            - restaurant: {"date": "2025-01-15", "party_size": 4}
+            - hair_salon: {"date": "2025-01-15", "service": "Haircut"}
+            - spa: {"date": "2025-01-15", "service": "Massage", "duration": "60min"}
 
     Returns:
         List of time slots with:
         - time: Time in HH:MM format
         - available: true/false
-        - covers_available: Number of seats available
+        - covers_available: Number of seats/slots available
 
-    Example:
-        check_availability(venue_id="demo_paris_001", date="2025-01-15", party_size=4)
+    Examples:
+        # Restaurant
+        check_availability(
+            venue_id="demo_paris_001",
+            category="restaurant",
+            params={"date": "2025-01-15", "party_size": 4}
+        )
+
+        # Hair salon
+        check_availability(
+            venue_id="demo_paris_hair_001",
+            category="hair_salon",
+            params={"date": "2025-01-15", "service": "Haircut"}
+        )
     """
     mapping = registry.get_mapping(venue_id)
     if mapping:
         adapter = get_adapter_for_provider(mapping.provider)
     else:
-        adapter = demo_adapter  # Default fallback
+        adapter = demo_adapter
 
     slots = await adapter.get_availability(
         venue_id=venue_id,
-        date=date,
-        party_size=party_size
+        category=category,
+        params=params
     )
     return [s.model_dump() for s in slots]
 
@@ -148,9 +184,8 @@ async def check_availability(
 @mcp.tool
 async def book(
     venue_id: str,
-    date: str,
-    time: str,
-    party_size: int,
+    category: str,
+    params: dict,
     customer_name: str,
     customer_email: str,
     customer_phone: str
@@ -158,11 +193,16 @@ async def book(
     """
     Book a slot at a venue.
 
+    IMPORTANT: Call get_filters(category, "book") first
+    to see required parameters for this category.
+
     Args:
         venue_id: Venue identifier
-        date: Date in YYYY-MM-DD format
-        time: Time in HH:MM format (e.g., "19:30")
-        party_size: Number of guests
+        category: Business category (restaurant, hair_salon, spa, fitness)
+        params: Category-specific parameters from get_filters:
+            - restaurant: {"date": "2025-01-15", "time": "19:30", "party_size": 4}
+            - hair_salon: {"date": "2025-01-15", "time": "14:00", "service": "Haircut"}
+            - spa: {"date": "2025-01-15", "time": "10:00", "service": "Massage", "duration": "60min"}
         customer_name: Full name of the guest
         customer_email: Email address
         customer_phone: Phone number with country code
@@ -171,17 +211,27 @@ async def book(
         Booking confirmation with:
         - id: Booking reference number
         - venue_name: Venue name
-        - date, time, party_size: Booking details
+        - params: Booking details
         - status: "confirmed" if successful
 
-    Example:
+    Examples:
+        # Restaurant booking
         book(
             venue_id="demo_paris_001",
-            date="2025-01-15",
-            time="19:30",
-            party_size=4,
+            category="restaurant",
+            params={"date": "2025-01-15", "time": "19:30", "party_size": 4},
             customer_name="John Doe",
             customer_email="john@example.com",
+            customer_phone="+33612345678"
+        )
+
+        # Hair salon booking
+        book(
+            venue_id="demo_paris_hair_001",
+            category="hair_salon",
+            params={"date": "2025-01-15", "time": "14:00", "service": "Haircut"},
+            customer_name="Jane Doe",
+            customer_email="jane@example.com",
             customer_phone="+33612345678"
         )
     """
@@ -193,9 +243,8 @@ async def book(
 
     booking = await adapter.book(
         venue_id=venue_id,
-        date=date,
-        time=time,
-        party_size=party_size,
+        category=category,
+        params=params,
         customer_name=customer_name,
         customer_email=customer_email,
         customer_phone=customer_phone

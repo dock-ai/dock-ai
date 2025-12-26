@@ -119,8 +119,8 @@ class DemoAdapter(BaseAdapter):
     async def get_availability(
         self,
         venue_id: str,
-        date: str,
-        party_size: int
+        category: str,
+        params: dict
     ) -> list[TimeSlot]:
         """
         Get available time slots for a venue.
@@ -128,46 +128,56 @@ class DemoAdapter(BaseAdapter):
         In a real implementation, this would call:
         GET /venues/{venue_id}/availability
         """
+        date = params.get("date", "2025-01-01")
         time_slots = []
 
-        # Lunch slots: 12:00 - 14:30
-        for hour in range(12, 15):
-            for minute in [0, 30]:
-                if hour == 14 and minute == 30:
-                    continue
-                time_str = f"{hour:02d}:{minute:02d}"
-                available = hash(f"{venue_id}{date}{time_str}") % 3 != 0
-                covers = hash(f"{venue_id}{date}{time_str}covers") % 20 + 5
-
-                time_slots.append(TimeSlot(
-                    time=time_str,
-                    available=available,
-                    covers_available=covers if available else 0,
-                ))
-
-        # Dinner slots: 19:00 - 22:00
-        for hour in range(19, 23):
-            for minute in [0, 30]:
-                if hour == 22 and minute == 30:
-                    continue
-                time_str = f"{hour:02d}:{minute:02d}"
-                available = hash(f"{venue_id}{date}{time_str}") % 4 != 0
-                covers = hash(f"{venue_id}{date}{time_str}covers") % 25 + 10
-
-                time_slots.append(TimeSlot(
-                    time=time_str,
-                    available=available,
-                    covers_available=covers if available else 0,
-                ))
+        # Generate time slots based on category
+        if category == "restaurant":
+            # Lunch slots: 12:00 - 14:30
+            for hour in range(12, 15):
+                for minute in [0, 30]:
+                    if hour == 14 and minute == 30:
+                        continue
+                    time_str = f"{hour:02d}:{minute:02d}"
+                    available = hash(f"{venue_id}{date}{time_str}") % 3 != 0
+                    covers = hash(f"{venue_id}{date}{time_str}covers") % 20 + 5
+                    time_slots.append(TimeSlot(
+                        time=time_str,
+                        available=available,
+                        covers_available=covers if available else 0,
+                    ))
+            # Dinner slots: 19:00 - 22:00
+            for hour in range(19, 23):
+                for minute in [0, 30]:
+                    if hour == 22 and minute == 30:
+                        continue
+                    time_str = f"{hour:02d}:{minute:02d}"
+                    available = hash(f"{venue_id}{date}{time_str}") % 4 != 0
+                    covers = hash(f"{venue_id}{date}{time_str}covers") % 25 + 10
+                    time_slots.append(TimeSlot(
+                        time=time_str,
+                        available=available,
+                        covers_available=covers if available else 0,
+                    ))
+        else:
+            # Hair salon, spa, fitness: slots from 9:00 - 19:00
+            for hour in range(9, 20):
+                for minute in [0, 30]:
+                    time_str = f"{hour:02d}:{minute:02d}"
+                    available = hash(f"{venue_id}{date}{time_str}") % 3 != 0
+                    time_slots.append(TimeSlot(
+                        time=time_str,
+                        available=available,
+                        covers_available=1 if available else 0,
+                    ))
 
         return time_slots
 
     async def book(
         self,
         venue_id: str,
-        date: str,
-        time: str,
-        party_size: int,
+        category: str,
+        params: dict,
         customer_name: str,
         customer_email: str,
         customer_phone: str
@@ -193,9 +203,8 @@ class DemoAdapter(BaseAdapter):
             id=booking_id,
             venue_id=venue_id,
             venue_name=venue_name,
-            date=date,
-            time=time,
-            party_size=party_size,
+            category=category,
+            params=params,
             customer_name=customer_name,
             status="confirmed",
         )
