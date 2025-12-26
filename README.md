@@ -33,7 +33,7 @@ An MCP server that aggregates multiple booking platforms behind a unified interf
 ### 1. Clone and Install
 
 ```bash
-git clone https://github.com/yoannarz/dock-ai.git
+git clone https://github.com/dock-ai/dock-ai.git
 cd dock-ai
 
 # Create virtual environment

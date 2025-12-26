@@ -33,9 +33,9 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yoannarz/dock-ai"
-Repository = "https://github.com/yoannarz/dock-ai"
-Issues = "https://github.com/yoannarz/dock-ai/issues"
+Homepage = "https://github.com/dock-ai/dock-ai"
+Repository = "https://github.com/dock-ai/dock-ai"
+Issues = "https://github.com/dock-ai/dock-ai/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]
