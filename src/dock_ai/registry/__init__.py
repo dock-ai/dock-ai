@@ -1,5 +1,5 @@
-"""Registry module for restaurant-to-provider mappings."""
+"""Registry module for venue-to-provider mappings."""
 
-from .registry import Registry, RestaurantMapping
+from .registry import Registry, VenueMapping
 
-__all__ = ["Registry", "RestaurantMapping"]
+__all__ = ["Registry", "VenueMapping"]

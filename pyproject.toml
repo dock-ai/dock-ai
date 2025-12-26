@@ -42,3 +42,8 @@ where = ["src"]
 
 [project.scripts]
 dock-ai = "dock_ai.server:main"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["src"]

@@ -18,6 +18,9 @@ An MCP server that aggregates multiple booking platforms behind a unified interf
 │  ├── check_availability      - Check available time slots      │
 │  ├── book                    - Make a reservation              │
 │  ├── cancel                  - Cancel a reservation            │
+│  ├── get_venue_details       - Get detailed venue info         │
+│  ├── list_venues             - List venues with filters        │
+│  ├── get_booking_status      - Check booking status            │
 │  └── find_venue_by_domain    - Find by website                 │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
@@ -182,12 +185,42 @@ Find a venue by its website domain.
 find_venue_by_domain(domain="venue.example.com")
 ```
 
+### `get_venue_details`
+
+Get detailed information about a venue.
+
+```python
+get_venue_details(venue_id="demo_paris_001")
+# Returns: {"venue_id": "...", "name": "...", "category": "...", "metadata": {...}}
+```
+
+### `list_venues`
+
+List all venues with optional filters.
+
+```python
+list_venues()  # All venues
+list_venues(category="restaurant")  # Only restaurants
+list_venues(city="Paris")  # Only Paris venues
+list_venues(category="hair_salon", city="London")  # Combined filters
+```
+
+### `get_booking_status`
+
+Check the status of an existing booking.
+
+```python
+get_booking_status(booking_id="booking_abc123")
+# Returns: {"booking_id": "...", "status": "confirmed", ...}
+```
+
 ## Architecture
 
 ```
 dock-ai/
 ├── src/dock_ai/
-│   ├── server.py              # MCP server with 5 tools
+│   ├── server.py              # MCP server with 10 tools
+│   ├── categories.py          # Category definitions & validation
 │   ├── adapters/
 │   │   ├── base.py            # Abstract interface
 │   │   └── demo.py            # Demo adapter (mock data)
@@ -196,6 +229,7 @@ dock-ai/
 │       └── registry.py        # Venue → provider mapping
 ├── supabase/
 │   └── migrations/            # Database schema
+├── tests/                     # Test suite
 ├── CONTRIBUTING.md            # How to add adapters
 └── .env.example               # Environment template
 ```

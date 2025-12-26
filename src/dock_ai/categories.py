@@ -129,3 +129,83 @@ def get_available_categories() -> list[str]:
 def get_available_tools() -> list[str]:
     """Get list of all available tool names."""
     return [t.value for t in Tool]
+
+
+def validate_params(category: str, tool: str, params: dict) -> tuple[bool, str | None]:
+    """
+    Validate params against the expected schema for a category and tool.
+
+    Args:
+        category: Category name
+        tool: Tool name (check_availability, book)
+        params: Parameters to validate
+
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    filters = get_filters_for_category(category, tool)
+    if not filters:
+        return False, f"Unknown category '{category}' or tool '{tool}'"
+
+    missing = []
+    invalid = []
+
+    for param_name, schema in filters.items():
+        if isinstance(schema, dict):  # It's a schema definition
+            is_required = schema.get("required", False)
+            param_type = schema.get("type")
+
+            if param_name not in params:
+                if is_required:
+                    missing.append(param_name)
+                continue
+
+            value = params[param_name]
+
+            # Type validation
+            if param_type == "integer":
+                if not isinstance(value, int):
+                    invalid.append(f"{param_name} must be an integer")
+                else:
+                    min_val = schema.get("min")
+                    max_val = schema.get("max")
+                    if min_val is not None and value < min_val:
+                        invalid.append(f"{param_name} must be >= {min_val}")
+                    if max_val is not None and value > max_val:
+                        invalid.append(f"{param_name} must be <= {max_val}")
+
+            elif param_type == "date":
+                if not isinstance(value, str):
+                    invalid.append(f"{param_name} must be a string in YYYY-MM-DD format")
+                # Basic date format check
+                elif len(value) != 10 or value[4] != "-" or value[7] != "-":
+                    invalid.append(f"{param_name} must be in YYYY-MM-DD format")
+
+            elif param_type == "time":
+                if not isinstance(value, str):
+                    invalid.append(f"{param_name} must be a string in HH:MM format")
+                elif len(value) != 5 or value[2] != ":":
+                    invalid.append(f"{param_name} must be in HH:MM format")
+
+            elif param_type == "string":
+                if not isinstance(value, str):
+                    invalid.append(f"{param_name} must be a string")
+                options = schema.get("options")
+                if options and value not in options:
+                    invalid.append(f"{param_name} must be one of: {', '.join(options)}")
+
+    if missing:
+        return False, f"Missing required parameters: {', '.join(missing)}"
+    if invalid:
+        return False, "; ".join(invalid)
+
+    return True, None
+
+
+def is_valid_category(category: str) -> bool:
+    """Check if a category is valid."""
+    try:
+        Category(category.lower().replace(" ", "_"))
+        return True
+    except ValueError:
+        return False
