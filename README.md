@@ -13,7 +13,8 @@ An MCP server that aggregates multiple booking platforms behind a unified interf
 │  DOCK-AI MCP                                                    │
 │                                                                 │
 │  Tools:                                                         │
-│  ├── search_venues           - Search venues by city           │
+│  ├── get_filters             - Get filters for a category      │
+│  ├── search_venues           - Search venues by category/city  │
 │  ├── check_availability      - Check available time slots      │
 │  ├── book                    - Make a reservation              │
 │  ├── cancel                  - Cancel a reservation            │
@@ -85,16 +86,31 @@ Restart Claude Desktop and try:
 
 ## Available Tools
 
+### `get_filters`
+
+Get available search filters for a business category. Call this first!
+
+```python
+get_filters(category="restaurant")
+# Returns: {"cuisine": ["French", "Japanese", ...], "price_range": ["$", "$$", ...]}
+
+get_filters(category="hair_salon")
+# Returns: {"service": ["Haircut", "Coloring", ...], "gender": ["Men", "Women"]}
+```
+
+**Supported categories:** `restaurant`, `hair_salon`, `spa`, `fitness`
+
 ### `search_venues`
 
-Search for venues by city, date, and party size.
+Search for venues by category, city, and filters.
 
 ```python
 search_venues(
+    category="restaurant",
     city="Paris",
     date="2025-01-15",
     party_size=4,
-    cuisine="French"  # optional
+    filters={"cuisine": "French", "price_range": "$$"}
 )
 ```
 
@@ -160,9 +176,20 @@ dock-ai/
 └── .env.example               # Environment template
 ```
 
+## For Booking Platforms
+
+Want to integrate your booking platform with Dock AI?
+
+**Contact us:** [yoann@dockai.co](mailto:yoann@dockai.co)
+
+We'll work with you to:
+1. Build an adapter for your API
+2. Securely configure credentials
+3. Add your venues to the registry
+
 ## Adding a New Provider
 
-Want to add support for a new booking platform? See [CONTRIBUTING.md](CONTRIBUTING.md) for a step-by-step guide.
+For developers who want to contribute an adapter, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ```python
 # Example: Adding a new provider
@@ -176,7 +203,7 @@ class YourProviderAdapter(BaseAdapter):
 
 ## Contributing
 
-Contributions are welcome! The most impactful contribution is adding new booking provider adapters. See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ## License
 

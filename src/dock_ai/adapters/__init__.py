@@ -1,6 +1,6 @@
 """Booking provider adapters."""
 
-from .base import BaseAdapter, Restaurant, TimeSlot, Booking
+from .base import BaseAdapter, Venue, TimeSlot, Booking
 from .demo import DemoAdapter
 
 
@@ -37,7 +37,7 @@ def get_adapter_for_provider(provider: str, **kwargs) -> BaseAdapter:
 
 __all__ = [
     "BaseAdapter",
-    "Restaurant",
+    "Venue",
     "TimeSlot",
     "Booking",
     "DemoAdapter",

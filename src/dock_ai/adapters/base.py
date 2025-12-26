@@ -1,21 +1,22 @@
-"""Base adapter class and shared models for restaurant booking providers."""
+"""Base adapter class and shared models for booking providers."""
 
 from abc import ABC, abstractmethod
 from pydantic import BaseModel
 
 
-class Restaurant(BaseModel):
-    """Restaurant information from a booking provider."""
+class Venue(BaseModel):
+    """Venue information from a booking provider."""
     id: str
     name: str
     address: str
-    cuisine: str
-    provider: str  # "zenchef", "planity", etc.
+    category: str  # "restaurant", "hair_salon", "spa", etc.
+    subcategory: str | None = None  # "French", "Haircut", etc.
+    provider: str
     rating: float | None = None
 
 
 class TimeSlot(BaseModel):
-    """Available time slot for a restaurant."""
+    """Available time slot for a venue."""
     time: str  # "19:00"
     available: bool
     covers_available: int
@@ -24,8 +25,8 @@ class TimeSlot(BaseModel):
 class Booking(BaseModel):
     """Confirmed booking information."""
     id: str
-    restaurant_id: str
-    restaurant_name: str
+    venue_id: str
+    venue_name: str
     date: str
     time: str
     party_size: int
@@ -44,34 +45,36 @@ class BaseAdapter(ABC):
         city: str,
         date: str,
         party_size: int,
-        cuisine: str | None = None
-    ) -> list[Restaurant]:
+        category: str,
+        filters: dict | None = None
+    ) -> list[Venue]:
         """
-        Search for restaurants in a city.
+        Search for venues in a city.
 
         Args:
             city: City name to search in
             date: Date in YYYY-MM-DD format
             party_size: Number of people
-            cuisine: Optional cuisine filter (e.g., "Italian", "French")
+            category: Business category (restaurant, hair_salon, spa, etc.)
+            filters: Optional filters (e.g., {"cuisine": "French"})
 
         Returns:
-            List of available restaurants
+            List of available venues
         """
         ...
 
     @abstractmethod
     async def get_availability(
         self,
-        restaurant_id: str,
+        venue_id: str,
         date: str,
         party_size: int
     ) -> list[TimeSlot]:
         """
-        Get available time slots for a restaurant.
+        Get available time slots for a venue.
 
         Args:
-            restaurant_id: Restaurant identifier
+            venue_id: Venue identifier
             date: Date in YYYY-MM-DD format
             party_size: Number of people
 
@@ -83,7 +86,7 @@ class BaseAdapter(ABC):
     @abstractmethod
     async def book(
         self,
-        restaurant_id: str,
+        venue_id: str,
         date: str,
         time: str,
         party_size: int,
@@ -92,10 +95,10 @@ class BaseAdapter(ABC):
         customer_phone: str
     ) -> Booking:
         """
-        Create a restaurant booking.
+        Create a booking.
 
         Args:
-            restaurant_id: Restaurant identifier
+            venue_id: Venue identifier
             date: Date in YYYY-MM-DD format
             time: Time in HH:MM format
             party_size: Number of people

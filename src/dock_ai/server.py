@@ -3,11 +3,25 @@
 from fastmcp import FastMCP
 
 from .adapters import DemoAdapter, get_adapter_for_provider
+from .categories import get_filters_for_category, get_available_categories
 from .registry import Registry
 
-
 # Initialize FastMCP server
-mcp = FastMCP(name="dock-ai")
+mcp = FastMCP(
+    name="dock-ai",
+    instructions="""
+        Dock AI aggregates multiple booking platforms into a unified interface.
+
+        IMPORTANT: Before calling search_venues, always call get_filters(category)
+        first to discover available filter options for that business category.
+
+        Typical flow:
+        1. get_filters(category="restaurant") → see available cuisines, price ranges
+        2. search_venues(category="restaurant", city="Paris", ...) → find venues
+        3. check_availability(venue_id, date, party_size) → see time slots
+        4. book(...) → make reservation
+    """
+)
 
 # Initialize adapters and registry
 demo_adapter = DemoAdapter()
@@ -15,40 +29,81 @@ registry = Registry()
 
 
 @mcp.tool
+async def get_filters(category: str) -> dict:
+    """
+    Get available search filters for a business category.
+
+    Call this BEFORE search_venues to discover what filters are available.
+
+    Args:
+        category: Business category (restaurant, hair_salon, spa, fitness)
+
+    Returns:
+        Dictionary of filter names and their possible values.
+
+    Example:
+        get_filters(category="restaurant")
+        # Returns: {"cuisine": ["French", "Japanese", ...], "price_range": ["$", "$$", ...]}
+    """
+    filters = get_filters_for_category(category)
+
+    if not filters:
+        return {
+            "error": f"Unknown category: {category}",
+            "available_categories": get_available_categories()
+        }
+
+    return {
+        "category": category.lower().replace(" ", "_"),
+        "filters": filters
+    }
+
+
+@mcp.tool
 async def search_venues(
+    category: str,
     city: str,
     date: str,
     party_size: int,
-    cuisine: str | None = None
+    filters: dict | None = None
 ) -> list[dict]:
     """
     Search for available venues in a city.
 
-    Aggregates results from multiple booking platforms to find the best options.
+    IMPORTANT: Call get_filters(category) first to see available filter options.
 
     Args:
+        category: Business type (restaurant, hair_salon, spa, fitness)
         city: City to search (e.g., "Paris", "London", "New York")
         date: Desired date in YYYY-MM-DD format (e.g., "2025-01-15")
         party_size: Number of guests (e.g., 2, 4, 6)
-        cuisine: Optional cuisine/category filter (e.g., "French", "Japanese")
+        filters: Optional filters from get_filters (e.g., {"cuisine": "French", "price_range": "$$"})
 
     Returns:
         List of venues with:
         - id: Unique identifier
         - name: Venue name
         - address: Full address
-        - cuisine: Category type
+        - category: Business category
+        - subcategory: Specific type (cuisine, service, etc.)
         - rating: Rating (out of 5)
         - provider: Source platform
 
     Example:
-        search_venues(city="Paris", date="2025-01-15", party_size=4, cuisine="French")
+        search_venues(
+            category="restaurant",
+            city="Paris",
+            date="2025-01-15",
+            party_size=4,
+            filters={"cuisine": "French", "price_range": "$$"}
+        )
     """
     venues = await demo_adapter.search(
         city=city,
         date=date,
         party_size=party_size,
-        cuisine=cuisine
+        category=category,
+        filters=filters
     )
     return [v.model_dump() for v in venues]
 
@@ -83,7 +138,7 @@ async def check_availability(
         adapter = demo_adapter  # Default fallback
 
     slots = await adapter.get_availability(
-        restaurant_id=venue_id,
+        venue_id=venue_id,
         date=date,
         party_size=party_size
     )
@@ -137,7 +192,7 @@ async def book(
         adapter = demo_adapter
 
     booking = await adapter.book(
-        restaurant_id=venue_id,
+        venue_id=venue_id,
         date=date,
         time=time,
         party_size=party_size,
