@@ -21,6 +21,7 @@ An MCP server that aggregates multiple booking platforms behind a unified interf
 │  ├── get_venue_details       - Get detailed venue info         │
 │  ├── list_venues             - List venues with filters        │
 │  ├── get_booking_status      - Check booking status            │
+│  ├── list_bookings           - List bookings with filters      │
 │  └── find_venue_by_domain    - Find by website                 │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
@@ -214,12 +215,23 @@ get_booking_status(booking_id="booking_abc123")
 # Returns: {"booking_id": "...", "status": "confirmed", ...}
 ```
 
+### `list_bookings`
+
+List bookings with optional filters.
+
+```python
+list_bookings()  # All bookings
+list_bookings(customer_email="john@example.com")  # By customer
+list_bookings(venue_id="demo_paris_001")  # By venue
+list_bookings(status="confirmed")  # By status
+```
+
 ## Architecture
 
 ```
 dock-ai/
 ├── src/dock_ai/
-│   ├── server.py              # MCP server with 10 tools
+│   ├── server.py              # MCP server with 11 tools
 │   ├── categories.py          # Category definitions & validation
 │   ├── adapters/
 │   │   ├── base.py            # Abstract interface
